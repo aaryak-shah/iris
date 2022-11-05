@@ -1,14 +1,14 @@
 # Syntax Definition
 
-## Creating an HTTP Server
+## (Basic) Creating an HTTP Server
 
 ```dart
-import "package:trident/server.dart";
+import "package:iris/server.dart";
 
 async void main() {
     const port = 8080;
     try {
-        TridentServer server = TridentServer
+        IrisServer server = IrisServer
             .http()
             .start(port);
         print("Server started on port $port");
@@ -18,13 +18,13 @@ async void main() {
 }
 ```
 
-## Setting Routes
+## Extensive Example
 
 ```dart
 // login_route.dart
-import "package:trident/types.dart";
-import "package:trident/route.dart";
-import "package:trident/validation.dart";
+import "package:iris/types.dart";
+import "package:iris/route.dart";
+import "package:iris/validation.dart";
 
 class MyPasswordType extends CustomType {
     String passwordStr;
@@ -45,7 +45,7 @@ class RegisterData extends RequestData {
     MyPasswordType password;
 
     @override
-    void customValidator() {
+    void validator() {
         if (...)
             throw CustomTypeError("...");
         else if (...)
@@ -53,31 +53,68 @@ class RegisterData extends RequestData {
     }
 }
 
-class RegisterRoute extends Route<RegisterData> {
+class RegisterResponse extends ResponseData {
+    Jwt token;
+    Profile user;
+
     @override
-    void post(RegisterData req, Response res) {
+    Json toJson() {
+        ...
+        return jsonObject;
+    }
+}
+
+class RegisterRoute extends Route<RegisterData, RegisterResponse> {
+    @override
+    void postRoute(RegisterData req, RegisterResponse res) {
         // No need to validate req data. happens automatically
         ...
         try {
             ...
+            // req.cookies
+            // req.body
+            // req.params
+            // req.query
+            // req.headers *
+            // req.injected
+            // add relevant data to "res" object
         } catch(e) {
             ...
         }
-        res.json();
+        // res.json(Json(...));
+        res
+            ..setCookie(Cookie())
+            ..status(200)
+            ..reply();
+        // res.str("...")
+        // res.bytes(...)
+        // res.protobuf(ProtocolBuffer(...))
+        // res.file(File())
+    }
+}
+```
+
+```dart
+import "package:iris/middleware.dart";
+
+class RequestLogger extends Middleware<RegisterData> {
+    @override
+    bool run(RegisterData req, ResponseData res) {
+        ...
     }
 }
 ```
 
 ```dart
 // main.dart
-import "package:trident/server.dart";
+import "package:iris/server.dart";
 
 void main() {
     // HttpConfig config = 
     RouteTable routes = RouteTable(
         routes: {
             "/": IndexRoute(),
-            "/register": RegisterRoute(),
+            "/register": RegisterRoute(middleware: [RequestLogger()]),
             "/browse": RouteTable(
                 routes: {
                     "/": BrowseRoute(),
@@ -96,8 +133,9 @@ void main() {
     )
     const port = 8080;
     try {
-        TridentServer server = TridentServer.http(secure: false)
-        server.settings(config)
+        IrisServer server = IrisServer.httpREST(secure: false)
+        server
+            ..settings(config)
             ..routes(routes)
             ..useMiddleware(List<Middleware>[...])
             ..start(port);
@@ -107,3 +145,15 @@ void main() {
     }
 }
 ```
+
+# HTTP Headers
+
+## Request Headers
+
+Important:
+- Accept
+- 
+
+Additional:
+
+## Response Headers

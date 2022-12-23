@@ -27,7 +27,7 @@ class Route<T extends Response> extends _RouteRoot {
     for (Middleware mw in pathMiddleware) {
       // TODO: mw(req, res) -> if res is sent then end connection
       // DOUBT: if OK is set true by previous middleware or any one. 
-      // res.ok = false;
+      // res.ok = false; // middleware code edits the res.ok to true
       mw(req, res);
       if(res.ok == false){
         allcalled = false;

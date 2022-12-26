@@ -51,6 +51,7 @@ Future<void> handlePost(HttpRequest request) async {
 
   String jsonString = await request.cast<List<int>>().transform(utf8.decoder).join();
   
+  print(request.method);
   print(jsonString);
   bool isform = false;
   var formdata = {};
@@ -94,7 +95,8 @@ Future<void> handlePost(HttpRequest request) async {
   }
 
   request.response.write(
-      formdata
+    jsonEncode(formdata)
+      // formdata
   );
 
   await request.response.close();

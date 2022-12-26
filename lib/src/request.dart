@@ -4,9 +4,12 @@ export 'request.dart' show Request;
 
 class Request {
 
-  late bool bodyUsed; 
-  Request(HttpRequest request){
+  late dynamic method; 
+  late dynamic rawdata;
+  late dynamic body = {};
+  Request(HttpRequest request) async {
 
-    bodyUsed = request.bodyUsed;
+    method = request.method;
+    rawdata = await request.cast<List<int>>().transform(utf8.decoder).join();
   }
 }

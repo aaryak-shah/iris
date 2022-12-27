@@ -1,11 +1,9 @@
 import 'dart:io';
 
 import 'package:meta/meta.dart';
-
 import 'package:iris/src/middleware.dart';
-import './request.dart';
-
-import './response.dart';
+import 'package:iris/src/request.dart';
+import 'package:iris/src/response.dart';
 
 abstract class _RouteRoot {
   List<Middleware> middleware = [];
@@ -20,66 +18,75 @@ class Route<T extends Response> extends _RouteRoot {
     required HttpRequest request,
     required List<Middleware> pathMiddleware,
     required HttpResponse response,
-    Request req(request),
-    Response res(response),
   }) {
+    Request req = Request(request);
+    Response res = Response(response);
     bool allcalled = true;
     for (Middleware mw in pathMiddleware) {
       // TODO: mw(req, res) -> if res is sent then end connection
-      // DOUBT: if OK is set true by previous middleware or any one. 
+      // DOUBT: if OK is set true by previous middleware or any one.
       // res.ok = false; // middleware code edits the res.ok to true
-      mw(req, res);
-      if(res.ok == false){
+      mw.run(req, res);
+      if (res.ok == false) {
         allcalled = false;
         break;
       }
     }
-    // TODO: based on HTTP verb, run handler method    
-    if(allcalled){
-      switch (req.method){
-        case "GET": { 
-          get(req, res)
-        } 
-        break; 
-        case "HEAD": { 
-          head(req, res) 
-        } 
-        break;
-        case "POST": { 
-          post(req, res) 
-        } 
-        break;
-        case "PUT": { 
-          put(req, res); 
-        } 
-        break;
-        case "PATCH": { 
-          patch(req, res);
-        } 
-        break;
-        case "DELETE": { 
-          delete(req, res);
-        } 
-        break;
-        case "CONNECT": { 
-          connect(req, res);
-        } 
-        break;
-        case "OPTIONS": { 
-          options(req, res);
-        } 
-        break;
-        case "TRACE": { 
-          trace(req, res);
-        } 
-        break; 
-        default: { 
-            //statements;  
-        }
-        break; // reduntant ig
+    // TODO: based on HTTP verb, run handler method
+    if (allcalled) {
+      switch (req.method) {
+        case "GET":
+          {
+            get(req, res);
+          }
+          break;
+        case "HEAD":
+          {
+            head(req, res);
+          }
+          break;
+        case "POST":
+          {
+            post(req, res);
+          }
+          break;
+        case "PUT":
+          {
+            put(req, res);
+          }
+          break;
+        case "PATCH":
+          {
+            patch(req, res);
+          }
+          break;
+        case "DELETE":
+          {
+            delete(req, res);
+          }
+          break;
+        case "CONNECT":
+          {
+            connect(req, res);
+          }
+          break;
+        case "OPTIONS":
+          {
+            options(req, res);
+          }
+          break;
+        case "TRACE":
+          {
+            trace(req, res);
+          }
+          break;
+        default:
+          {
+            //statements;
+          }
+          break; // reduntant ig
       }
     }
-  
   }
 
   // TODO: send default error messages in handlers

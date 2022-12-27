@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:iris/src/middleware.dart';
 
-import './router.dart';
+import 'package:iris/src/middleware.dart';
+import 'package:iris/src/router.dart';
 
 class IrisServer {
   late int _port;
@@ -15,19 +15,32 @@ class IrisServer {
 
   Future<void> start() async {
     try {
+      // define server
       server = await HttpServer.bind(InternetAddress.anyIPv4, port);
+
+      // setup listener
       await server.forEach((HttpRequest request) {
+        // calculate path segments
         List<String> segments = List.from(request.uri.pathSegments);
         segments.removeWhere((element) => element == "");
+
+        // obtain route and middleware
         List<Middleware> pathMiddleware = [];
         Route route = RouteTable.findRoute(
           pathSegments: segments,
           routeTable: _routes,
           pathMiddleware: pathMiddleware,
         );
+
         print("${request.uri.pathSegments}");
         print("$segments");
-        route.handleRoute(request: request, pathMiddleware: pathMiddleware);
+
+        // execute targets
+        route.handleRoute(
+          request: request,
+          response: request.response,
+          pathMiddleware: pathMiddleware,
+        );
       });
     } catch (e) {
       rethrow;
@@ -36,5 +49,3 @@ class IrisServer {
 
   int get port => _port;
 }
-
-// website.com/home//profile

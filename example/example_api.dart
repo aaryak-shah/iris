@@ -1,4 +1,4 @@
-import "package:iris/iris.dart";
+import 'package:iris/core.dart';
 
 Future<void> main() async {
   RouteTable routes = RouteTable(

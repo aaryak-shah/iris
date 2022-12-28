@@ -19,7 +19,7 @@ class IrisServer {
       server = await HttpServer.bind(InternetAddress.anyIPv4, port);
 
       // setup listener
-      await server.forEach((HttpRequest request) {
+      await server.forEach((HttpRequest request) async {
         // calculate path segments
         List<String> segments = List.from(request.uri.pathSegments);
         segments.removeWhere((element) => element == "");
@@ -36,11 +36,14 @@ class IrisServer {
         print("$segments");
 
         // execute targets
-        route.handleRoute(
+        await route.handleRoute(
           request: request,
           response: request.response,
           pathMiddleware: pathMiddleware,
         );
+
+        request.response.write("a");
+        request.response.close();
       });
     } catch (e) {
       rethrow;

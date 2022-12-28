@@ -1,20 +1,26 @@
+import 'package:iris/consts/content_type.dart';
 import 'package:iris/core.dart';
+import 'package:iris/utils.dart';
+
+class HomeRoute extends Route {
+  HomeRoute(String name, List<Middleware> middleware)
+      : super(name, middleware: middleware);
+
+  @override
+  void post(Request req, Response res) {
+    print("Running HomeRoute POST");
+    print("${req.body}");
+    super.post(req, res);
+  }
+}
 
 Future<void> main() async {
   RouteTable routes = RouteTable(
     routes: {
-      "/": Route("/"),
-      "register": Route("register"),
-      "browse": RouteTable(routes: {
-        "/": Route("/browse/"),
-        "product/:id": Route("/browse/product/???"),
-      }),
-      "profile": RouteTable(routes: {
-        "/": Route("/profile/"),
-        "history": Route("/profile/history"),
-        "settings": Route("/profile/settings"),
-      }),
-      // "*": CustomNotFound(),
+      "/": HomeRoute(
+        "/",
+        [BodyParser(contentType: ContentType.application_UrlEncoded)],
+      ),
     },
   );
 

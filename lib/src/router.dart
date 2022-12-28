@@ -14,20 +14,24 @@ class Route<T extends Response> extends _RouteRoot {
   String name;
 
   @nonVirtual
-  void handleRoute({
+  Future<void> handleRoute({
     required HttpRequest request,
     required List<Middleware> pathMiddleware,
     required HttpResponse response,
-  }) {
+  }) async {
     Request req = Request(request);
+    await req.getRaw();
+
     Response res = Response(response);
+
     bool allcalled = true;
+
     for (Middleware mw in pathMiddleware) {
       // TODO: mw(req, res) -> if res is sent then end connection
       // DOUBT: if OK is set true by previous middleware or any one.
       // res.ok = false; // middleware code edits the res.ok to true
       mw.run(req, res);
-      if (res.ok == false) {
+      if (res.sent == true) {
         allcalled = false;
         break;
       }

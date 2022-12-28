@@ -2,6 +2,6 @@ import 'dart:io';
 export 'response.dart' show Response;
 
 class Response {
-  late bool ok;
+  bool sent = false;
   Response(HttpResponse response);
 }

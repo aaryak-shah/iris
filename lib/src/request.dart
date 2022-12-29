@@ -7,14 +7,10 @@ class Request {
   late String method;
   late HttpRequest request;
   late dynamic rawdata;
+  late Map<String, dynamic> headers;
   late dynamic body = {};
   Request(this.request) {
     method = request.method;
-    // TODO: (fix) await for type transformation
-    // rawdata = /* await */ request
-    //     .cast<List<int>>()
-    //     .transform(utf8.decoder)
-    //     .join();
   }
 
   Future<void> getRaw() async {

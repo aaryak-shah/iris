@@ -94,15 +94,15 @@ class Route<T extends Response> extends _RouteRoot {
   }
 
   // TODO: send default error messages in handlers
-  void get(Request req, Response res) {}
-  void head(Request req, Response res) {}
-  void post(Request req, Response res) {}
-  void put(Request req, Response res) {}
-  void patch(Request req, Response res) {}
-  void delete(Request req, Response res) {}
-  void connect(Request req, Response res) {}
-  void options(Request req, Response res) {}
-  void trace(Request req, Response res) {}
+  Future<void> get(Request req, Response res) async {}
+  Future<void> head(Request req, Response res) async {}
+  Future<void> post(Request req, Response res) async {}
+  Future<void> put(Request req, Response res) async {}
+  Future<void> patch(Request req, Response res) async {}
+  Future<void> delete(Request req, Response res) async {}
+  Future<void> connect(Request req, Response res) async {}
+  Future<void> options(Request req, Response res) async {}
+  Future<void> trace(Request req, Response res) async {}
   Route(this.name, {List<Middleware> middleware = const []})
       : super(middleware);
 }

@@ -41,9 +41,6 @@ class IrisServer {
           response: request.response,
           pathMiddleware: pathMiddleware,
         );
-
-        request.response.write("a");
-        request.response.close();
       });
     } catch (e) {
       rethrow;

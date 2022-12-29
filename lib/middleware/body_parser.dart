@@ -40,6 +40,7 @@ class BodyParser extends Middleware {
 
   Map<String, dynamic> _decodeMultiPartFormData(String raw) {
     Map<String, dynamic> formData = {};
+    // print(raw);
 
     for (int i = 5; i < raw.length; i++) {
       if (raw.substring(i - 5, i) == "name=") {

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:iris/consts/content_type.dart';
 import 'package:iris/core.dart';
 import 'package:iris/utils.dart';
@@ -7,10 +9,17 @@ class HomeRoute extends Route {
       : super(name, middleware: middleware);
 
   @override
-  void post(Request req, Response res) {
+  Future<void> post(Request req, Response res) async {
     print("Running HomeRoute POST");
     print("${req.body}");
-    super.post(req, res);
+    res.append([1,2,3]);
+    sleep(Duration(seconds: 1));
+    res.append([75,76]);
+    sleep(Duration(seconds: 1));
+    res.append([71,72]);
+    await res.send("SEND DATA");
+    await res.close();
+    // super.post(req, res);
   }
 }
 
@@ -19,7 +28,7 @@ Future<void> main() async {
     routes: {
       "/": HomeRoute(
         "/",
-        [BodyParser(contentType: ContentType.application_UrlEncoded)],
+        [BodyParser(contentType: ContentType.text_Plain)],
       ),
     },
   );

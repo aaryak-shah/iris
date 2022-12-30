@@ -4,6 +4,16 @@ import 'package:iris/consts/content_type.dart';
 import 'package:iris/core.dart';
 import 'package:iris/utils.dart';
 
+class IsAuthenticated extends Middleware {
+  @override
+  Future<void> run(Request req, Response res) async {
+    if (req.body['password'] == "asasa") {
+      await res.send("HELLO");
+      await res.close();
+    }
+  }
+}
+
 class HomeRoute extends Route {
   HomeRoute(String name, List<Middleware> middleware)
       : super(name, middleware: middleware);
@@ -11,12 +21,7 @@ class HomeRoute extends Route {
   @override
   Future<void> post(Request req, Response res) async {
     print("Running HomeRoute POST");
-    print("${req.body}");
-    res.append([1,2,3]);
-    sleep(Duration(seconds: 1));
-    res.append([75,76]);
-    sleep(Duration(seconds: 1));
-    res.append([71,72]);
+    res.setStatus(HttpStatus.ok);
     await res.send("SEND DATA");
     await res.close();
     // super.post(req, res);
@@ -24,14 +29,27 @@ class HomeRoute extends Route {
 }
 
 Future<void> main() async {
-  RouteTable routes = RouteTable(
-    routes: {
-      "/": HomeRoute(
-        "/",
-        [BodyParser(contentType: ContentType.text_Plain)],
-      ),
-    },
-  );
+  RouteTable routes = RouteTable(routes: {
+    "/user": RouteTable(routes: {
+      "/:userid": RouteTable(routes: {
+        "/profile": RouteTable(routes: {
+          "/:profileid": RouteTable(routes: {
+            "/endprofile": HomeRoute(
+              "/",
+              [
+                BodyParser(contentType: ContentType.application_Json),
+                IsAuthenticated()
+              ],
+            ),
+          }),
+        })
+      }),
+    })
+  });
+
+  routes.constructRegexRoutes("", [], routes.routes);
+  print(routes.regexParamNames);
+  print(routes.regexRoutes);
 
   IrisServer server = IrisServer(
     port: 5000,

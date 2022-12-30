@@ -109,8 +109,39 @@ class Route<T extends Response> extends _RouteRoot {
 
 class RouteTable extends _RouteRoot {
   Map<String, _RouteRoot> routes;
+  Map<RegExp, Route> regexRoutes = {};
+  Map<RegExp, List<String>> regexParamNames = {};
+
   RouteTable({required this.routes, List<Middleware> middleware = const []})
       : super(middleware);
+
+  void constructRegexRoutes(
+      String rule, List<String> paramsList, Map<String, _RouteRoot> routes) {
+    String str = r"([^\/]+)\/";
+    routes.forEach((path, route) {
+      if (path.startsWith("/:")) {
+        paramsList.add(path.substring(2));
+        rule += str;
+      } else {
+        rule += "${path.substring(1)}/";
+      }
+      if (route is Route) {
+        regexRoutes[RegExp(rule)] = route;
+        regexParamNames[RegExp(rule)] = List.from(paramsList);
+      } else {
+        constructRegexRoutes(rule, paramsList, (route as RouteTable).routes);
+      }
+      if (path.startsWith("/:")) {
+        paramsList.removeLast();
+        int end = rule.length - str.length - 1;
+        rule = rule.substring(0, end);
+      } else {
+        int end = rule.length - path.length;
+        rule = rule.substring(0, end);
+      }
+    });
+  }
+
   // TODO: validate routes so "/" endpoints cannot be set as RouteTables.
   static Route findRoute({
     required List<String> pathSegments,

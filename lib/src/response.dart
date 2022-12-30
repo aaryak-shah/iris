@@ -7,25 +7,31 @@ export 'response.dart' show Response;
 class Response {
   bool sent = false;
   bool headersSet = false;
+  // late Map<String, dynamic> headers;
   late HttpResponse response;
+  dynamic locals = {};
+
+  Response(this.response) {
+    // headers = Map();
+    // setHeaders();
+  }
 
   Future<void> send(String responseText) async {
-    if(!sent){
+    if (!sent) {
       response.write(responseText);
       sent = true;
       headersSet = true;
       await response.flush();
       await response.close();
-    }else {
+    } else {
       throw ResponseException("Response Already Sent!");
     }
   }
 
-  void append(List<int> responseBytes){
-    if(!headersSet){
+  void append(List<int> responseBytes) {
+    if (!headersSet) {
       headersSet = true;
-      response.headers.contentType 
-        = ContentType("application", "octet-stream");
+      response.headers.contentType = ContentType("application", "octet-stream");
     }
     response.add(responseBytes);
   }
@@ -35,15 +41,13 @@ class Response {
     await response.close();
   }
 
-  void setStatus(HttpStatus status){
-    // response.statusCode
+  void setStatus(int status) {
+    response.statusCode = status;
   }
 
   Future<void> json(Map<String, dynamic> responseData) async {
-    response.headers.contentType
-      = ContentType("application", "json", charset: "utf-8");
+    response.headers.contentType =
+        ContentType("application", "json", charset: "utf-8");
     await send(convert.json.encode(responseData));
   }
-
-  Response(this.response);
 }

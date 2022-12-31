@@ -12,6 +12,7 @@ class Response {
   dynamic locals = {};
 
   Response(this.response) {
+    response.headers.set('X-Powered-By', 'Iris');
     // headers = Map();
     // setHeaders();
   }

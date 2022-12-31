@@ -2,17 +2,16 @@ import 'dart:convert';
 
 import 'package:iris/consts/content_type.dart';
 import 'package:iris/exceptions/decode_exception.dart';
-import 'package:iris/src/middleware.dart';
-import 'package:iris/src/request.dart';
-import 'package:iris/src/response.dart';
+import 'package:iris/core.dart';
 
 class BodyParser extends Middleware {
   final ContentType contentType;
+  // TODO: automatically infer content type from header
   BodyParser({required this.contentType});
 
   @override
   void run(Request req, Response res) {
-    req.body = _decodeAny(req.rawdata);
+    req.body = _decodeAny(req.rawData);
   }
 
   dynamic _decodeAny(String raw) {
@@ -40,7 +39,6 @@ class BodyParser extends Middleware {
 
   Map<String, dynamic> _decodeMultiPartFormData(String raw) {
     Map<String, dynamic> formData = {};
-    // print(raw);
 
     for (int i = 5; i < raw.length; i++) {
       if (raw.substring(i - 5, i) == "name=") {

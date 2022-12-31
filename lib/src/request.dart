@@ -4,15 +4,14 @@ import 'dart:convert';
 export 'request.dart' show Request;
 
 class Request {
-  late String method;
   late HttpRequest request;
-  late dynamic rawdata;
-  late dynamic body = {};
+  late dynamic rawData;
+  dynamic body = {};
+  Map<String, String> params = {};
 
-  Request(this.request) {
-    method = request.method;
-  }
+  Request(this.request);
 
+  String get method => request.method;
   Map<String, List<String>> get query => request.uri.queryParametersAll;
   String get fragment => request.uri.fragment;
 
@@ -23,6 +22,6 @@ class Request {
   }
 
   Future<void> getRaw() async {
-    rawdata = await request.cast<List<int>>().transform(utf8.decoder).join();
+    rawData = await request.cast<List<int>>().transform(utf8.decoder).join();
   }
 }

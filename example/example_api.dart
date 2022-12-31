@@ -47,10 +47,6 @@ Future<void> main() async {
     })
   });
 
-  routes.constructRegexRoutes("", [], routes.routes);
-  print(routes.regexParamNames);
-  print(routes.regexRoutes);
-
   IrisServer server = IrisServer(
     port: 5000,
     routes: routes,

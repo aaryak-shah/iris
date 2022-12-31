@@ -2,8 +2,7 @@ import 'dart:core';
 
 class ResponseException implements Exception {
   late String _msg;
-  ResponseException(
-      String msg) {
+  ResponseException(String msg) {
     _msg = msg;
   }
 

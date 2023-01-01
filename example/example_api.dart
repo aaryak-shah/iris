@@ -15,7 +15,7 @@ class IsAuthenticated extends Middleware {
 }
 
 class HomeRoute extends Route {
-  HomeRoute(String name, List<Middleware> middleware)
+  HomeRoute(String name, {List<Middleware> middleware = const []})
       : super(name, middleware: middleware);
 
   @override
@@ -29,17 +29,16 @@ class HomeRoute extends Route {
 }
 
 Future<void> main() async {
-  RouteTable routes = RouteTable(routes: {
+  RouteTable routes = RouteTable(middleware: [
+    BodyParser(contentType: ContentType.application_Json)
+  ], routes: {
     "/user": RouteTable(routes: {
       "/:userid": RouteTable(routes: {
         "/profile": RouteTable(routes: {
           "/:profileid": RouteTable(routes: {
             "/endprofile": HomeRoute(
               "/",
-              [
-                BodyParser(contentType: ContentType.application_Json),
-                IsAuthenticated()
-              ],
+              middleware: [IsAuthenticated()],
             ),
           }),
         })

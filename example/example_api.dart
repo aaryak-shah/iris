@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:iris/consts/content_type.dart';
 import 'package:iris/core.dart';
 import 'package:iris/utils.dart';
 
@@ -30,7 +29,7 @@ class HomeRoute extends Route {
 
 Future<void> main() async {
   RouteTable routes = RouteTable(middleware: [
-    BodyParser(contentType: ContentType.application_Json)
+    BodyParser()
   ], routes: {
     "/user": RouteTable(routes: {
       "/:userid": RouteTable(routes: {

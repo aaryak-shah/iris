@@ -1,76 +1,38 @@
+import 'dart:io';
 import 'dart:convert';
 
-import 'package:iris/consts/content_type.dart';
 import 'package:iris/exceptions/decode_exception.dart';
 import 'package:iris/core.dart';
 
 class BodyParser extends Middleware {
-  final ContentType contentType;
-  // TODO: automatically infer content type from header
-  BodyParser({required this.contentType});
+  late ContentType contentType;
 
   @override
   void run(Request req, Response res) {
+    contentType = req.headers.contentType ?? ContentType.binary;
     req.body = _decodeAny(req.rawData);
   }
 
   dynamic _decodeAny(String raw) {
-    switch (contentType) {
-      case ContentType.text_Plain:
-        return _decodeRaw(raw);
-      case ContentType.application_Json:
-        return _decodeJson(raw);
-      case ContentType.multipart_FormData:
-        return _decodeMultiPartFormData(raw);
-      case ContentType.application_UrlEncoded:
-        return _decodeUrlEncodedFormData(raw);
-      default:
-        throw ParserUnknownTypeExcpetion();
+    if (contentType.value == ContentType.text.value) {
+      return _decodeRaw(raw);
+    } else if (contentType.value == ContentType.json.value) {
+      return _decodeJson(raw);
+    } else if (contentType.value ==
+        ContentType.parse('application/x-www-form-urlencoded').value) {
+      return _decodeUrlEncodedFormData(raw);
+    } else if (contentType.value == ContentType.binary.value) {
+      return _decodeBinary(raw);
+    } else {
+      throw ParserUnknownTypeExcpetion();
     }
   }
 
-  String _decodeRaw(String raw) {
-    return raw;
-  }
+  dynamic _decodeBinary(dynamic raw) => raw;
 
-  dynamic _decodeJson(String raw) {
-    return json.decode(raw);
-  }
+  String _decodeRaw(String raw) => raw;
 
-  Map<String, dynamic> _decodeMultiPartFormData(String raw) {
-    Map<String, dynamic> formData = {};
-
-    for (int i = 5; i < raw.length; i++) {
-      if (raw.substring(i - 5, i) == "name=") {
-        i++;
-        int start = i;
-        while (i < raw.length &&
-            !((raw[i - 1] == '"' && raw[i] == '\r') ||
-                (raw[i - 1] == '"' && raw[i] == ';'))) {
-          i++;
-        }
-        int end = i - 1;
-        String key = raw.substring(start, end);
-        while (i < raw.length && !(raw[i - 1] == '\n' && raw[i] == '\r')) {
-          i++;
-        }
-        String value = "";
-
-        if (i < raw.length) {
-          i += 2;
-          start = i;
-          while (raw[i] != '\r') {
-            i++;
-          }
-          end = i;
-          value = raw.substring(start, end);
-        }
-        formData[key] = value;
-      }
-    }
-
-    return formData;
-  }
+  dynamic _decodeJson(String raw) => json.decode(raw);
 
   Map<String, dynamic> _decodeUrlEncodedFormData(String raw) {
     Map<String, dynamic> formData = {};

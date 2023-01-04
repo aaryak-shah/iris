@@ -13,8 +13,6 @@ class Response {
 
   Response(this.response) {
     response.headers.set('X-Powered-By', 'Iris');
-    // headers = Map();
-    // setHeaders();
   }
 
   Future<void> send(String responseText) async {

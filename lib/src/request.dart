@@ -14,12 +14,14 @@ class Request {
   String get method => request.method;
   Map<String, List<String>> get query => request.uri.queryParametersAll;
   String get fragment => request.uri.fragment;
+  HttpHeaders get headers => request.headers;
 
-  Map<String, dynamic> get headers {
-    Map<String, dynamic> reqHeaders = {};
-    request.headers.forEach((name, values) => reqHeaders[name] = values);
-    return reqHeaders;
-  }
+  // Map<String, dynamic> get headers {
+  //   Map<String, dynamic> reqHeaders = {};
+  //   request.headers.contentType;
+  //   request.headers.forEach((name, values) => reqHeaders[name] = values);
+  //   return reqHeaders;
+  // }
 
   Future<void> getRaw() async {
     rawData = await request.cast<List<int>>().transform(utf8.decoder).join();

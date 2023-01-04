@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:iris/utils.dart';
 import 'package:meta/meta.dart';
 import 'package:iris/src/middleware.dart';
 import 'package:iris/src/request.dart';
@@ -22,9 +23,6 @@ class Route<T extends Response> extends _RouteRoot {
     bool allMiddlewaresCalled = true;
 
     for (Middleware mw in pathMiddleware) {
-      // TODO: mw(req, res) -> if res is sent then end connection
-      // DOUBT: if OK is set true by previous middleware or any one.
-      // res.ok = false; // middleware code edits the res.ok to true
       mw.run(request, response);
       if (response.sent) {
         allMiddlewaresCalled = false;
@@ -32,7 +30,6 @@ class Route<T extends Response> extends _RouteRoot {
       }
     }
 
-    // TODO: based on HTTP verb, run handler method
     if (allMiddlewaresCalled) {
       switch (request.method) {
         case "GET":
@@ -84,7 +81,7 @@ class Route<T extends Response> extends _RouteRoot {
           {
             //statements;
           }
-          break; // reduntant ig
+          break;
       }
     }
   }
@@ -125,6 +122,40 @@ class RouteTable extends _RouteRoot {
   // TODO: validate routes so "/" endpoints cannot be set as RouteTables.
   RouteTable({required this.routes, List<Middleware> middleware = const []})
       : super(middleware);
+  final String _parameterRegexRule = r"([^\/]+)\/";
+
+  Pair<String, List<String>> _createRuleAndParams({
+    required String rule,
+    required List<String> paramsList,
+    required String path,
+  }) {
+    List<String> pathSegments = path.split('/');
+    // If it is a named route
+    // Add a new RegEx rule for the parameter to the existing rule
+    for (String segment in pathSegments) {
+      if (segment == '') {
+        continue;
+      }
+      if (RegExp(r':.+$').hasMatch(segment)) {
+        paramsList.add(segment.substring(1));
+        rule += _parameterRegexRule;
+      } else {
+        rule += segment + r"\/";
+      }
+    }
+    return Pair(rule, paramsList);
+  }
+
+  Pair<String, List<String>> _removeRuleAndParams({
+    required String rule,
+    required List<String> paramsList,
+    required int initialParamsCount,
+    required int initialRuleLength,
+  }) {
+    paramsList.removeRange(initialParamsCount, paramsList.length);
+    rule = rule.substring(0, initialRuleLength);
+    return Pair(rule, paramsList);
+  }
 
   void constructRegexRoutes(
     String rule,
@@ -132,39 +163,58 @@ class RouteTable extends _RouteRoot {
     Map<String, _RouteRoot> routes,
   ) {
     // Capture named route parameters between two forward slashes
-    String parameterRegexRule = r"([^\/]+)\/";
-
     routes.forEach((path, route) {
-      // If it is a named route
-      if (path.startsWith("/:")) {
-        // Add a new RegEx rule for the parameter to the existing rule
-        paramsList.add(path.substring(2));
-        rule += parameterRegexRule;
-      } else {
-        // Otherwise if it is a simple string, add it to the existing rule
-        rule += path.substring(1) + r"\/";
-      }
-
       // If we are at the end of the route tree (i.e. a terminal route)
+      int initialParamsCount = paramsList.length;
+      int initialRuleLength = rule.length;
+      var ruleAndParamList = _createRuleAndParams(
+        rule: rule,
+        paramsList: paramsList,
+        path: path,
+      );
+      rule = ruleAndParamList.first;
+      paramsList = ruleAndParamList.second;
+
       if (route is Route) {
         // Add the created RegEx rule to the maps
+
+        var ruleAndParamList = _createRuleAndParams(
+          rule: rule,
+          paramsList: paramsList,
+          path: route.name,
+        );
+        rule = ruleAndParamList.first;
+        paramsList = ruleAndParamList.second;
+
+        int initialParentParamsCount = paramsList.length;
+        int initialParentRuleLength = rule.length;
+
         RegExp regExpRule = RegExp(rule + r"?$", caseSensitive: false);
         regexRoutes[regExpRule] = route;
         regexParamNames[regExpRule] = List.from(paramsList);
+
+        ruleAndParamList = _removeRuleAndParams(
+          rule: rule,
+          paramsList: paramsList,
+          initialParamsCount: initialParentParamsCount,
+          initialRuleLength: initialParentRuleLength,
+        );
+        rule = ruleAndParamList.first;
+        paramsList = ruleAndParamList.second;
       } else {
         // If the route is a RouteTable, recursively call the function for the sub-routes
         constructRegexRoutes(rule, paramsList, (route as RouteTable).routes);
       }
 
       // For backtracking, undo the rules created for the previous route
-      if (path.startsWith("/:")) {
-        paramsList.removeLast();
-        int end = rule.length - parameterRegexRule.length - 1;
-        rule = rule.substring(0, end);
-      } else {
-        int end = rule.length - path.length - 1;
-        rule = rule.substring(0, end);
-      }
+      ruleAndParamList = _removeRuleAndParams(
+        rule: rule,
+        paramsList: paramsList,
+        initialParamsCount: initialParamsCount,
+        initialRuleLength: initialRuleLength,
+      );
+      rule = ruleAndParamList.first;
+      paramsList = ruleAndParamList.second;
     });
   }
 
@@ -173,11 +223,14 @@ class RouteTable extends _RouteRoot {
     required Request request,
     required List<Middleware> pathMiddleware,
   }) {
+    List<String> routeSegments = route.split('/');
+    routeSegments.removeWhere((segment) => segment == '' || segment == ':');
+    route = routeSegments.join('/');
+
     // By default, when no route is matched, it is a not found route
     Route matchedRoute = Route('');
     // Keep a list of keys used in the route table (used to traverse for collecting middlewares)
     List<String> traversal = route.split('/');
-    print(regexParamNames);
 
     // Iterate over all the created RegEx rules to find a match for the given route
     for (MapEntry regexRoute in regexRoutes.entries) {
@@ -213,7 +266,7 @@ class RouteTable extends _RouteRoot {
         break;
       }
     }
-
+    // print('Regex routes: $regexRoutes');
     Map<String, _RouteRoot> children = routes;
 
     // Use the traversal list to find the path of the route in the route table and collect associated middlewares
@@ -227,8 +280,6 @@ class RouteTable extends _RouteRoot {
       }
     }
 
-    print(request.params);
-    print(traversal);
     return matchedRoute;
   }
 }

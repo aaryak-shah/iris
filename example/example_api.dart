@@ -1,22 +1,49 @@
-import "package:iris/iris.dart";
+import 'dart:io';
+
+import 'package:iris/core.dart';
+import 'package:iris/utils.dart';
+
+class IsAuthenticated extends Middleware {
+  @override
+  Future<void> run(Request req, Response res) async {
+    if (req.body['password'] == "asasa") {
+      await res.send("HELLO");
+      await res.close();
+    }
+  }
+}
+
+class HomeRoute extends Route {
+  HomeRoute(String name, {List<Middleware> middleware = const []})
+      : super(name, middleware: middleware);
+
+  @override
+  Future<void> post(Request req, Response res) async {
+    print("Running HomeRoute POST");
+    res.setStatus(HttpStatus.ok);
+    await res.send("SEND DATA");
+    await res.close();
+    // super.post(req, res);
+  }
+}
 
 Future<void> main() async {
-  RouteTable routes = RouteTable(
-    routes: {
-      "/": Route("/"),
-      "register": Route("register"),
-      "browse": RouteTable(routes: {
-        "/": Route("/browse/"),
-        "product/:id": Route("/browse/product/???"),
+  RouteTable routes = RouteTable(middleware: [
+    BodyParser()
+  ], routes: {
+    "/user": RouteTable(routes: {
+      "/:userid": RouteTable(routes: {
+        "/profile": RouteTable(routes: {
+          "/:profileid": RouteTable(routes: {
+            "/endprofile": HomeRoute(
+              "/",
+              middleware: [IsAuthenticated()],
+            ),
+          }),
+        })
       }),
-      "profile": RouteTable(routes: {
-        "/": Route("/profile/"),
-        "history": Route("/profile/history"),
-        "settings": Route("/profile/settings"),
-      }),
-      // "*": CustomNotFound(),
-    },
-  );
+    })
+  });
 
   IrisServer server = IrisServer(
     port: 5000,
